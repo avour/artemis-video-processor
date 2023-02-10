@@ -35,6 +35,7 @@ struct ReelsConfig {
     id: u128,
     number_of_reels: i64,
     reels: Vec<Reels>,
+    ext: String,
 }
 
 #[derive(FromForm)]
@@ -51,12 +52,13 @@ async fn start_reels(mut form: Form<ReelsForm<'_>>) -> Json<ReelsConfig> {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_millis();
-
     let filepath = format!(
-        "{}reels_{}.mp4",
+        "{}reels_{}.{}",
         env::temp_dir().to_str().unwrap(),
-        timestamp
+        timestamp,
+        form.file.content_type().unwrap().extension().unwrap(),
     );
+
     form.file
         .persist_to(&filepath)
         .await
@@ -75,10 +77,11 @@ async fn start_reels(mut form: Form<ReelsForm<'_>>) -> Json<ReelsConfig> {
 
     for index in 0..number_of_reels {
         let output_file = format!(
-            "{}reels_{}-{}.mp4",
+            "{}reels_{}-{}.{}",
             env::temp_dir().to_str().unwrap(),
             timestamp,
-            index
+            index,
+            form.file.content_type().unwrap().extension().unwrap(),
         );
 
         let start_time = index * form.max_reels_duration;
@@ -121,10 +124,14 @@ async fn start_reels(mut form: Form<ReelsForm<'_>>) -> Json<ReelsConfig> {
         reels.push(Reels { size: file_size })
     }
 
+    // delete original file
+    std::fs::remove_file(&filepath).unwrap();
+
     Json(ReelsConfig {
         id: timestamp,
         number_of_reels: number_of_reels,
         reels: reels,
+        ext: form.file.content_type().unwrap().extension().unwrap().to_string(),
     })
 }
 
@@ -132,40 +139,32 @@ async fn start_reels(mut form: Form<ReelsForm<'_>>) -> Json<ReelsConfig> {
 struct ReelsQuery {
     id: u128,
     start_index: u8,
-    max_reels_duration: i64,
+    end_index: u8,
+    ext: String,
 }
 
 #[get("/get_reels?<query..>")]
 fn get_reels(query: ReelsQuery) -> ReaderStream![File] {
-    let filepath = format!(
-        "{}reels_{}.mp4",
-        env::temp_dir().to_str().unwrap(),
-        query.id
-    );
-
-    //// check if file exist
-    assert!(Path::new(&filepath).exists(), "File Doesn't exists");
-
-    let duration = utils::get_video_duration(&filepath);
-
-    println!("Duration: {}", duration);
-    let number_of_reels = utils::get_number_of_reels(duration, query.max_reels_duration);
 
     ReaderStream! {
-        for index in (query.start_index as i64)..number_of_reels {
-            let output_file = format!("{}reels_{}-{}.mp4", env::temp_dir().to_str().unwrap(), query.id, index);
 
-            if let Ok(file) = File::open(output_file).await {
+        for index in query.start_index..query.end_index {
+            let output_file = format!("{}reels_{}-{}.{}", env::temp_dir().to_str().unwrap(), query.id, index, query.ext);
+
+            if let Ok(file) = File::open(&output_file).await {
                 yield file;
             }
+            std::fs::remove_file(&output_file).unwrap();
         }
     }
 }
 
 #[launch]
 fn rocket() -> _ {
-    println!("{}", 100.megabytes().as_u128());
-    // println!("{}", ContentType:: );
+    // String
+    // let list: Vec<usize> = Vec::new();
+    // println!("{:?}", std::mem::size_of::<usize>());
+    // println!("{}", 100.megabytes().as_u128());
     rocket::build()
         .attach(CORS)
         .mount("/", routes![start_reels, get_reels])
