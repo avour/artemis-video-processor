@@ -1,0 +1,28 @@
+server {
+    listen 80;
+    server_name d19byhmzy086sf.cloudfront.net;
+
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+sudo nano /etc/nginx/sites-available/rocket
+sudo nano /etc/nginx/nginx.conf
+
+sudo service nginx restart
+
+
+# view rocket logs
+journalctl -fu d264tekgsemw28.cloudfront.net.service
+sudo systemctl daemon-reload
+sudo systemctl restart d264tekgsemw28.cloudfront.net.service
+
+sudo nano /etc/systemd/system/d264tekgsemw28.cloudfront.net.service
+
+sudo tail -f /var/log/nginx/access.log
