@@ -20,8 +20,8 @@ sudo service nginx restart
 
 # view rocket logs
 journalctl -fu d264tekgsemw28.cloudfront.net.service
-sudo systemctl daemon-reload
 sudo systemctl restart d264tekgsemw28.cloudfront.net.service
+sudo systemctl daemon-reload
 
 sudo nano /etc/systemd/system/d264tekgsemw28.cloudfront.net.service
 
