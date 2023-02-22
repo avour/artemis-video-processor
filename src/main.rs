@@ -94,12 +94,14 @@ async fn start_reels(mut form: Form<ReelsForm<'_>>) -> Json<ReelsConfig> {
         command.args([
             "-ss",
             &utils::convert_timestamp(start_time),
-            "-i",
-            &filepath,
             "-to",
             &utils::convert_timestamp(end_time),
+            "-i",
+            &filepath,
             "-c",
             "copy",
+            "-avoid_negative_ts",
+            "make_zero",
             &output_file,
         ]);
         println!("{:?}", command.get_args().collect::<Vec<&OsStr>>());
