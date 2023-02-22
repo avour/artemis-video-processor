@@ -92,10 +92,10 @@ async fn start_reels(mut form: Form<ReelsForm<'_>>) -> Json<ReelsConfig> {
 
         let mut command = Command::new("ffmpeg");
         command.args([
-            "-i",
-            &filepath,
             "-ss",
             &utils::convert_timestamp(start_time),
+            "-i",
+            &filepath,
             "-to",
             &utils::convert_timestamp(end_time),
             "-c",
@@ -151,7 +151,6 @@ fn get_reels(query: ReelsQuery) -> ReaderStream![File] {
             if let Ok(file) = File::open(&output_file).await {
                 yield file;
             }
-            // std::fs::
             std::fs::remove_file(&output_file).unwrap();
         }
     }
@@ -167,3 +166,4 @@ fn rocket() -> _ {
         .attach(CORS)
         .mount("/", routes![start_reels, get_reels])
 }
+// cargo watch -x run
