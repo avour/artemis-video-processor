@@ -1,8 +1,11 @@
 // use std::path::Path;
 use std::process::Command;
 
-
 pub fn get_number_of_reels(duration: i64, max_reels_duration: i64) -> i64 {
+    if duration < max_reels_duration {
+        return duration;
+    }
+
     let mut number_of_reels = duration / max_reels_duration;
 
     // if there is extra reels > 10 seconds
