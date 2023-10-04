@@ -114,7 +114,7 @@ async fn start_reels(mut form: Form<ReelsForm<'_>>) -> Json<ReelsConfig> {
             "Video processing failed on ffmpeg command"
         );
         // in bytes
-        
+
         let file_size = std::fs::File::open(&output_file)
             .unwrap()
             .metadata()
@@ -128,9 +128,15 @@ async fn start_reels(mut form: Form<ReelsForm<'_>>) -> Json<ReelsConfig> {
 
     Json(ReelsConfig {
         id: timestamp,
-        number_of_reels: number_of_reels,
-        reels: reels,
-        ext: form.file.content_type().unwrap().extension().unwrap().to_string(),
+        number_of_reels,
+        reels,
+        ext: form
+            .file
+            .content_type()
+            .unwrap()
+            .extension()
+            .unwrap()
+            .to_string(),
     })
 }
 
@@ -144,12 +150,11 @@ struct ReelsQuery {
 
 #[get("/get_reels?<query..>")]
 fn get_reels(query: ReelsQuery) -> ReaderStream![File] {
-
     ReaderStream! {
 
         for index in query.start_index..query.end_index {
             let output_file = format!("{}/reels_{}-{}.{}", env::temp_dir().to_str().unwrap(), query.id, index, query.ext);
-        
+
             if let Ok(file) = File::open(&output_file).await {
                 yield file;
             }

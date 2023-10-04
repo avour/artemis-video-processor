@@ -21,11 +21,11 @@ pub fn convert_timestamp(seconds: i64) -> String {
     let mut minutes = 0;
     if sec >= 3600 {
         hours = sec / 3600;
-        sec = sec % 3600;
+        sec %= 3600;
     }
     if sec >= 60 {
         minutes = sec / 60;
-        sec = sec % 60;
+        sec %= 60;
     }
     format!("{:02}:{:02}:{:02}", hours, minutes, sec)
 }
@@ -48,8 +48,8 @@ pub fn get_video_duration(path: &String) -> i64 {
         .output()
         .expect("failed to execute process");
 
-    let duration = String::from_utf8_lossy(&output.stdout);
-    let duration: f64 = duration.trim().parse().unwrap();
-    let duration = duration as i64;
-    duration
+    String::from_utf8_lossy(&output.stdout)
+        .trim()
+        .parse()
+        .unwrap()
 }
